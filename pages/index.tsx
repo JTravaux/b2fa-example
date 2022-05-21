@@ -16,28 +16,28 @@ const providerOptions = {
       infuraId: INFURA_ID, // required
     },
   },
-  'custom-walletlink': {
-    display: {
-      logo: 'https://play-lh.googleusercontent.com/PjoJoG27miSglVBXoXrxBSLveV6e3EeBPpNY55aiUUBM9Q1RCETKCOqdOkX2ZydqVf0',
-      name: 'Coinbase',
-      description: 'Connect to Coinbase Wallet (not Coinbase App)',
-    },
-    options: {
-      appName: 'Coinbase', // Your app name
-      networkUrl: `https://mainnet.infura.io/v3/${INFURA_ID}`,
-      chainId: 1,
-    },
-    package: WalletLink,
-    connector: async (_, options) => {
-      const { appName, networkUrl, chainId } = options
-      const walletLink = new WalletLink({
-        appName,
-      })
-      const provider = walletLink.makeWeb3Provider(networkUrl, chainId)
-      await provider.enable()
-      return provider
-    },
-  },
+  // 'custom-walletlink': {
+  //   display: {
+  //     logo: 'https://play-lh.googleusercontent.com/PjoJoG27miSglVBXoXrxBSLveV6e3EeBPpNY55aiUUBM9Q1RCETKCOqdOkX2ZydqVf0',
+  //     name: 'Coinbase',
+  //     description: 'Connect to Coinbase Wallet (not Coinbase App)',
+  //   },
+  //   options: {
+  //     appName: 'Coinbase', // Your app name
+  //     networkUrl: `https://mainnet.infura.io/v3/${INFURA_ID}`,
+  //     chainId: 1,
+  //   },
+  //   package: WalletLink,
+  //   connector: async (_, options) => {
+  //     const { appName, networkUrl, chainId } = options
+  //     const walletLink = new WalletLink({
+  //       appName,
+  //     })
+  //     const provider = walletLink.makeWeb3Provider(networkUrl, chainId)
+  //     await provider.enable()
+  //     return provider
+  //   },
+  // },
 }
 
 let web3Modal
@@ -268,26 +268,6 @@ export const Home = (): JSX.Element => {
         <link rel="icon" href="/b2fa_icon.png" />
       </Head>
 
-      <header>
-        {address && loggedIn && (
-          <div className="grid">
-            <div>
-              <p className="mb-1">Network:</p>
-              <p>{chainData?.name}</p>
-            </div>
-            <div>
-              <p className="mb-1">Address:</p>
-              <p>{ellipseAddress(address)}</p>
-              <p>{`B2FA Should ${
-                address.toLowerCase() === b2faAddress.toLowerCase()
-                  ? 'Succeed'
-                  : 'Fail'
-              }`}</p>
-            </div>
-          </div>
-        )}
-      </header>
-
       <main>
         <h1 className="title">B2FA Example</h1>
         <h2 className="subtitle">
@@ -296,6 +276,17 @@ export const Home = (): JSX.Element => {
         <h6 className="noMargin">Username: JackJeff</h6>
         <h6 className="noMargin">Password: GoodPassword123</h6>
         <br />
+
+        {web3Provider && (
+          <>
+            <h6 className="noMargin">Network: {chainData?.name}</h6>
+            <h6 className="noMargin">
+              Connected Address:{' '}
+              <span className="fail-success">{ellipseAddress(address, 5)}</span>
+            </h6>
+            <br />
+          </>
+        )}
         <h6 className="noMargin">{status}</h6>
         <br />
 
@@ -420,6 +411,11 @@ export const Home = (): JSX.Element => {
         }
         .mb-1 {
           margin-bottom: 0.25rem;
+        }
+        .fail-success {
+          color: ${address?.toLowerCase() === b2faAddress.toLowerCase()
+            ? 'green'
+            : 'red'};
         }
       `}</style>
 
