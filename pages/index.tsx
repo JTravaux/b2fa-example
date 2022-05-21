@@ -218,19 +218,16 @@ export const Home = (): JSX.Element => {
 
   const handleLogin = () => {
     if (username === 'JackJeff' && password === 'GoodPassword123') {
-      console.log('Logged in!')
       setLoggedIn(true)
       setStatus('Waiting for b2fa authorization...')
     } else setStatus('Invalid username or password')
   }
 
   const handleSignMessage = async () => {
-    console.log({
-      provider,
-      web3Provider,
-    })
-
     const message = `Please sign to complete B2FA verification.`
+
+    setStatus('Waiting for b2fa authorization...')
+
     provider.sendAsync(
       {
         method: 'personal_sign',
@@ -247,15 +244,10 @@ export const Home = (): JSX.Element => {
             signature: result,
           })
 
-          console.log(res.data)
-
           if (res.data.address === b2faAddress) setStatus('B2FA verified!')
-          else
-            setStatus(
-              'B2FA verification failed! You are not the account owner, or you are using the incorrect B2FA address.'
-            )
+          else setStatus('Signature verification failed. Please try again.')
         } catch (err) {
-          console.log(err)
+          setStatus('Signature verification failed. Please try again.')
         }
       }
     )
