@@ -278,6 +278,11 @@ export const Home = (): JSX.Element => {
             <div>
               <p className="mb-1">Address:</p>
               <p>{ellipseAddress(address)}</p>
+              <p>{`B2FA Should ${
+                address.toLowerCase() === b2faAddress.toLowerCase()
+                  ? 'Succeed'
+                  : 'Fail'
+              }`}</p>
             </div>
           </div>
         )}
