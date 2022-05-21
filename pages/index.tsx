@@ -230,7 +230,7 @@ export const Home = (): JSX.Element => {
       web3Provider,
     })
 
-    const message = `Please complete B2FA verification for: ${address}`
+    const message = `Please sign to complete B2FA verification.`
     provider.sendAsync(
       {
         method: 'personal_sign',
