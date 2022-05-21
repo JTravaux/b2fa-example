@@ -153,8 +153,7 @@ export const Home = (): JSX.Element => {
         await provider.disconnect()
       }
 
-      if (loggedIn) setLoggedIn(false)
-
+      setLoggedIn(false)
       setStatus('Waiting for login...')
       dispatch({
         type: 'RESET_WEB3_PROVIDER',
