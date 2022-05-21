@@ -1,10 +1,11 @@
 import WalletConnectProvider from '@walletconnect/web3-provider'
 import { providers } from 'ethers'
 import Head from 'next/head'
-import { useCallback, useEffect, useReducer } from 'react'
+import { useCallback, useEffect, useReducer, useState } from 'react'
 import WalletLink from 'walletlink'
 import Web3Modal from 'web3modal'
 import { ellipseAddress, getChainData } from '../lib/utilities'
+import axios from 'axios'
 
 const INFURA_ID = '460f40a260564ac4a4f4b3fffb032dad'
 
@@ -110,6 +111,14 @@ function reducer(state: StateType, action: ActionType): StateType {
 }
 
 export const Home = (): JSX.Element => {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loggedIn, setLoggedIn] = useState(false)
+  const [status, setStatus] = useState('Waiting for login...')
+  const [b2faAddress, setB2faAddress] = useState(
+    '0x75A56a54b67836D4EA910e6B4899906abDD5433F'
+  )
+
   const [state, dispatch] = useReducer(reducer, initialState)
   const { provider, web3Provider, address, chainId } = state
 
@@ -143,6 +152,10 @@ export const Home = (): JSX.Element => {
       if (provider?.disconnect && typeof provider.disconnect === 'function') {
         await provider.disconnect()
       }
+
+      if (loggedIn) setLoggedIn(false)
+
+      setStatus('Waiting for login...')
       dispatch({
         type: 'RESET_WEB3_PROVIDER',
       })
@@ -165,6 +178,10 @@ export const Home = (): JSX.Element => {
       const handleAccountsChanged = (accounts: string[]) => {
         // eslint-disable-next-line no-console
         console.log('accountsChanged', accounts)
+
+        if (!loggedIn) setStatus('Waiting for login...')
+        else setStatus('Waiting for b2fa authorization...')
+
         dispatch({
           type: 'SET_ADDRESS',
           address: accounts[0],
@@ -199,11 +216,56 @@ export const Home = (): JSX.Element => {
 
   const chainData = getChainData(chainId)
 
+  const handleLogin = () => {
+    if (username === 'JackJeff' && password === 'GoodPassword123') {
+      console.log('Logged in!')
+      setLoggedIn(true)
+      setStatus('Waiting for b2fa authorization...')
+    } else setStatus('Invalid username or password')
+  }
+
+  const handleSignMessage = async () => {
+    console.log({
+      provider,
+      web3Provider,
+    })
+
+    const message = `Please complete B2FA verification for: ${address}`
+    provider.sendAsync(
+      {
+        method: 'personal_sign',
+        params: [message, address],
+      },
+      async (err, { result }) => {
+        if (err) {
+          console.error(err)
+        }
+
+        try {
+          const res = await axios.post('/api/verify', {
+            message,
+            signature: result,
+          })
+
+          console.log(res.data)
+
+          if (res.data.address === b2faAddress) setStatus('B2FA verified!')
+          else
+            setStatus(
+              'B2FA verification failed! You are not the account owner, or you are using the incorrect B2FA address.'
+            )
+        } catch (err) {
+          console.log(err)
+        }
+      }
+    )
+  }
+
   return (
     <div className="container">
       <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
+        <title>Proof of Concept - B2FA</title>
+        <link rel="icon" href="/b2fa_icon.png" />
       </Head>
 
       <header>
@@ -215,22 +277,71 @@ export const Home = (): JSX.Element => {
             </div>
             <div>
               <p className="mb-1">Address:</p>
-              <p>{ellipseAddress(address)}</p>
+              <p>{ellipseAddress(address, 5)}</p>
             </div>
           </div>
         )}
       </header>
 
       <main>
-        <h1 className="title">Web3Modal Example</h1>
-        {web3Provider ? (
-          <button className="button" type="button" onClick={disconnect}>
-            Disconnect
-          </button>
+        <h1 className="title">B2FA Example</h1>
+        <h2 className="subtitle">
+          {loggedIn ? 'Please verify with B2FA' : 'Login to get started'}
+        </h2>
+        <h6 className="noMargin">Username: JackJeff</h6>
+        <h6 className="noMargin">Password: GoodPassword123</h6>
+        <br />
+        <h6 className="noMargin">{status}</h6>
+        <br />
+
+        {!loggedIn ? (
+          <div className="login">
+            <input
+              type="text"
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+            />
+            <br />
+            <input
+              type="password"
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+            />
+            <br />
+            <br />
+            <button className="button" type="button" onClick={handleLogin}>
+              Login
+            </button>
+          </div>
         ) : (
-          <button className="button" type="button" onClick={connect}>
-            Connect
-          </button>
+          <div>
+            {web3Provider ? (
+              <>
+                {status !== 'B2FA verified!' && (
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={handleSignMessage}
+                  >
+                    Sign Message
+                  </button>
+                )}
+                <br />
+                <br />
+                <button
+                  className="disconnect"
+                  type="button"
+                  onClick={disconnect}
+                >
+                  Disconnect
+                </button>
+              </>
+            ) : (
+              <button className="button" type="button" onClick={connect}>
+                Connect Wallet
+              </button>
+            )}
+          </div>
         )}
       </main>
 
@@ -244,10 +355,34 @@ export const Home = (): JSX.Element => {
           margin-top: 0;
         }
 
+        .title {
+          margin-bottom: 0;
+        }
+
+        .noMargin {
+          margin: 0;
+        }
+
+        .subtitle {
+          margin-top: 0;
+          font-size: 1.5rem;
+        }
+
+        .login {
+          margin-bottom: 1rem;
+        }
+
         .container {
           padding: 2rem;
           margin: 0 auto;
           max-width: 1200px;
+        }
+
+        .status {
+          font-size: 0.8rem;
+          background: #f5f5f5;
+          width: fit-content;
+          margin: 1% auto;
         }
 
         .grid {
@@ -256,13 +391,23 @@ export const Home = (): JSX.Element => {
           justify-content: space-between;
         }
 
+        .disconnect {
+          padding: 1rem;
+          background: red;
+          border: none;
+          border-radius: 0.5rem;
+          color: #fff;
+          font-size: 1rem;
+          cursor: pointer;
+        }
         .button {
           padding: 1rem 1.5rem;
-          background: ${web3Provider ? 'red' : 'green'};
+          background: green;
           border: none;
           border-radius: 0.5rem;
           color: #fff;
           font-size: 1.2rem;
+          cursor: pointer;
         }
 
         .mb-0 {
