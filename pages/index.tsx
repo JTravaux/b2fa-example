@@ -116,7 +116,7 @@ export const Home = (): JSX.Element => {
   const [loggedIn, setLoggedIn] = useState(false)
   const [status, setStatus] = useState('Waiting for login...')
   const [b2faAddress, setB2faAddress] = useState(
-    '0x75A56a54b67836D4EA910e6B4899906abDD5433F'
+    '0x11D71baa4AB419a28bA43D218C0F4657b892D26f'
   )
 
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -269,7 +269,7 @@ export const Home = (): JSX.Element => {
       </Head>
 
       <header>
-        {address && (
+        {address && loggedIn && (
           <div className="grid">
             <div>
               <p className="mb-1">Network:</p>
@@ -277,7 +277,7 @@ export const Home = (): JSX.Element => {
             </div>
             <div>
               <p className="mb-1">Address:</p>
-              <p>{ellipseAddress(address, 5)}</p>
+              <p>{ellipseAddress(address)}</p>
             </div>
           </div>
         )}
