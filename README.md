@@ -1,5 +1,5 @@
-# Web3Modal Next.js Example
+# Signature Authentication Example
 
-This is a simple example of how to set up [Web3Modal](https://github.com/Web3Modal/web3modal) with a modern Next.js application.
+This is a proof of concept for using ethereum signatures to verify a user
 
 👀 [View the Live Demo](https://web3modal-example.vercel.app/)
